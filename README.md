@@ -8,7 +8,7 @@ A production-grade RAG backend for internal developer tooling.
 
 ## Setup
 1. Copy `.env.example` to `.env`.
-2. Set `XAI_API_KEY` and keep `LLM_PROVIDER=xai`.
+2. Set `GROQ_API_KEY` and keep `LLM_PROVIDER=groq`.
 3. Keep `EMBEDDING_PROVIDER=local` unless you have a compatible remote embedding endpoint.
 4. Start dependencies and services:
    `docker-compose up -d --build`
@@ -53,7 +53,7 @@ curl -X POST http://localhost:8000/gateway/chat \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [{"role": "user", "content": "Explain how the DecayProxyRotator works"}],
-    "model": "grok-3-mini",
+    "model": "llama-3.3-70b-versatile",
     "rag_query": "DecayProxyRotator implementation",
     "top_k": 3
   }'

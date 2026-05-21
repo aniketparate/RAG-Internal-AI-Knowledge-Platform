@@ -13,11 +13,14 @@ class Settings(BaseSettings):
     qdrant_port: int = 6333
     qdrant_collection: str = "knowledge_base"
     redis_url: str = "redis://localhost:6379/0"
+    groq_api_key: str = ""
+    llm_base_url_groq: str = "https://api.groq.com/openai/v1"
+    llm_default_model_groq: str = "llama-3.3-70b-versatile"
     xai_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
     api_key: str
-    llm_provider: str = "xai"
+    llm_provider: str = "groq"
     llm_base_url_xai: str = "https://api.x.ai/v1"
     embedding_model: str = "text-embedding-3-small"
     embedding_batch_size: int = 100

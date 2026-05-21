@@ -368,7 +368,7 @@
       ]
     },
     {
-      "name": "8) Gateway Chat with RAG (Grok)",
+      "name": "8) Gateway Chat with RAG (Groq)",
       "request": {
         "method": "POST",
         "header": [
@@ -385,7 +385,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain how the DecayProxyRotator works\"\n    }\n  ],\n  \"model\": \"grok-3-mini\",\n  \"rag_query\": \"DecayProxyRotator implementation\",\n  \"top_k\": 3\n}"
+          "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain how the DecayProxyRotator works\"\n    }\n  ],\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"rag_query\": \"DecayProxyRotator implementation\",\n  \"top_k\": 3\n}"
         },
         "url": {
           "raw": "{{base_url}}/gateway/chat",
@@ -397,7 +397,7 @@
             "chat"
           ]
         },
-        "description": "Runs retrieval-augmented chat through xAI/Grok."
+        "description": "Runs retrieval-augmented chat through Groq."
       },
       "event": [
         {
