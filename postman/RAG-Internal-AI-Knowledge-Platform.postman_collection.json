@@ -1,0 +1,445 @@
+{
+  "info": {
+    "_postman_id": "7c58ef16-975c-4e25-b2f8-aae5a96aa2f0",
+    "name": "RAG Internal AI Knowledge Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for document ingestion, query, and delete workflows."
+  },
+  "item": [
+    {
+      "name": "1) Upload Document (Async)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "metadata",
+              "value": "{\"team\":\"platform\",\"source\":\"postman\"}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/documents",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "documents"
+          ]
+        },
+        "description": "Uploads a document and queues async ingestion. Supports pdf, md, txt, py, js, ts, go, java, docx."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 202', function () {",
+              "  pm.response.to.have.status(202);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Response has document_id and job_id', function () {",
+              "  pm.expect(body.document_id).to.exist;",
+              "  pm.expect(body.job_id).to.exist;",
+              "  pm.expect(body.status).to.eql('pending');",
+              "});",
+              "",
+              "pm.environment.set('document_id', body.document_id);",
+              "pm.environment.set('job_id', body.job_id);",
+              "console.log('Saved document_id:', body.document_id);",
+              "console.log('Saved job_id:', body.job_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2) Get Document Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "documents",
+            "{{document_id}}"
+          ]
+        },
+        "description": "Poll this endpoint until status becomes ready, partial, or failed."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Status field is present', function () {",
+              "  pm.expect(body.status).to.exist;",
+              "});",
+              "",
+              "console.log('Current status:', body.status, 'chunk_count:', body.chunk_count);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3) Query Documents (By file_type)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"How does the proxy rotator handle failures?\",\n  \"top_k\": 5,\n  \"filters\": {\n    \"file_type\": \"py\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/query",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "query"
+          ]
+        },
+        "description": "Semantic query with metadata filter."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Response has ranked results and latency', function () {",
+              "  pm.expect(body.results).to.be.an('array');",
+              "  pm.expect(body.latency_ms).to.be.a('number');",
+              "});",
+              "",
+              "if (body.results.length > 0) {",
+              "  console.log('Top result score:', body.results[0].score);",
+              "  console.log('Top result file:', body.results[0].file_name);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4) Query Documents (By document_id)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"Summarize this document\",\n  \"top_k\": 3,\n  \"filters\": {\n    \"document_id\": \"{{document_id}}\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/query",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "query"
+          ]
+        },
+        "description": "Semantic query scoped to the uploaded document."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Results array exists', function () {",
+              "  pm.expect(body.results).to.be.an('array');",
+              "});",
+              "",
+              "if (body.results.length > 0) {",
+              "  pm.test('All results are from selected document', function () {",
+              "    body.results.forEach(r => pm.expect(r.document_id).to.eql(pm.environment.get('document_id')));",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5) Delete Document (Soft Delete)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "documents",
+            "{{document_id}}"
+          ]
+        },
+        "description": "Soft delete: marks DB row and vector payload as deleted."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Soft delete response shape', function () {",
+              "  pm.expect(body.deleted).to.eql(true);",
+              "  pm.expect(body.hard_delete).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6) Upload Document for Hard Delete",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/documents",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "documents"
+          ]
+        },
+        "description": "Upload a second document and save its ID for hard delete testing."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 202', function () {",
+              "  pm.response.to.have.status(202);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.environment.set('hard_document_id', body.document_id);",
+              "console.log('Saved hard_document_id:', body.document_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7) Delete Document (Hard Delete)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/documents/{{hard_document_id}}?hard=true",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "documents",
+            "{{hard_document_id}}"
+          ],
+          "query": [
+            {
+              "key": "hard",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "Hard delete: permanently removes metadata and vectors/chunks."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Hard delete response shape', function () {",
+              "  pm.expect(body.deleted).to.eql(true);",
+              "  pm.expect(body.hard_delete).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8) Gateway Chat with RAG (Grok)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Explain how the DecayProxyRotator works\"\n    }\n  ],\n  \"model\": \"grok-3-mini\",\n  \"rag_query\": \"DecayProxyRotator implementation\",\n  \"top_k\": 3\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/gateway/chat",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "gateway",
+            "chat"
+          ]
+        },
+        "description": "Runs retrieval-augmented chat through xAI/Grok."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Gateway response has content', function () {",
+              "  pm.expect(body.content).to.be.a('string');",
+              "  pm.expect(body.content.length).to.be.greaterThan(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "api_key",
+      "value": "internal-dev-key"
+    },
+    {
+      "key": "document_id",
+      "value": ""
+    },
+    {
+      "key": "job_id",
+      "value": ""
+    },
+    {
+      "key": "hard_document_id",
+      "value": ""
+    }
+  ]
+}

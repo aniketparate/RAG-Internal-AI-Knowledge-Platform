@@ -1,0 +1,20 @@
+# env/secrets
+.env
+*.key
+*.pem
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# test/cache/logs
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.log
+
+# local uploads/data
+data/
+tmp/
